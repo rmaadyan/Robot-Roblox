@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robot 3D - 5 Bentuk Dasar</title>
+    <title>Robot Sederhana 3D</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pyodide/0.24.1/pyodide.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
         }
         
@@ -20,589 +21,548 @@
             height: 100vh;
         }
         
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .loader {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         #controls {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 25px;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
             color: white;
-            min-width: 280px;
-            border: 2px solid rgba(78, 205, 196, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            z-index: 100;
+            min-width: 160px;
+            font-size: 12px;
         }
         
-        .control-section {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .control-group {
+            margin-bottom: 8px;
         }
         
-        .control-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            height: 4px;
+            background: #ddd;
+            outline: none;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4CAF50;
+            cursor: pointer;
+            border-radius: 50%;
         }
         
         button {
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
-            border: none;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            padding: 12px 18px;
-            margin: 5px;
-            border-radius: 25px;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 13px;
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            margin: 2px;
+            font-size: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
         }
         
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.5);
-            background: linear-gradient(45deg, #45b7d1, #4ECDC4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
         
-        button:active {
-            transform: translateY(-1px);
-        }
-        
-        .special-btn {
+        button.active {
             background: linear-gradient(45deg, #ff6b6b, #ee5a52);
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        }
-        
-        .special-btn:hover {
-            background: linear-gradient(45deg, #ff7979, #ff6b6b);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
         }
         
         #info {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 25px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 2px solid rgba(78, 205, 196, 0.3);
-            max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        h3 {
-            margin: 0 0 15px 0;
-            color: #4ecdc4;
-            font-size: 18px;
-        }
-        
-        .component-list {
-            list-style: none;
-            padding: 0;
-            margin: 15px 0;
-        }
-        
-        .component-list li {
-            padding: 8px 0;
-            border-left: 3px solid #4ecdc4;
-            padding-left: 15px;
-            margin: 5px 0;
-            background: rgba(78, 205, 196, 0.1);
-            border-radius: 5px;
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         
         .status {
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 15px;
-            text-align: center;
-        }
-        
-        .python-structure {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 15px;
             border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            margin-top: 15px;
-            border-left: 4px solid #4ecdc4;
-            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 500;
         }
         
-        .highlight {
-            color: #4ecdc4;
-            font-weight: bold;
+        #canvas-container {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <div id="controls">
-            <h3>🤖 Advanced Robot Controller</h3>
+        <div id="loading">
+            <div class="loader"></div>
+            <p>Memuat Robot 3D...</p>
+            <small>Mohon tunggu sebentar</small>
+        </div>
+        
+        <div id="controls" style="display: none;">
+            <h3 style="margin-top: 0; color: #4CAF50;">🤖 Kontrol Robot</h3>
             
-            <div class="control-section">
-                <button onclick="animateRobot()">🔄 Animate Robot</button>
-                <button onclick="robotDance()">💃 Robot Dance</button>
+            <div class="control-group">
+                <label>Rotasi Robot:</label>
+                <input type="range" id="robotRotation" min="0" max="360" value="0">
+                <span id="rotationValue">0°</span>
             </div>
             
-            <div class="control-section">
-                <button onclick="changeColors()">🎨 Random Colors</button>
-                <button onclick="toggleWireframe()">📐 Wireframe</button>
+            <div class="control-group">
+                <label>Animasi:</label>
+                <button id="armBtn" onclick="toggleArmAnimation()">🔄 Lengan</button>
+                <button id="eyeBtn" onclick="toggleEyeAnimation()">👁️ Mata</button>
             </div>
             
-            <div class="control-section">
-                <button onclick="resetView()" class="special-btn">🔄 Reset View</button>
-                <button onclick="autoRotate()" class="special-btn">🌀 Auto Rotate</button>
+            <div class="control-group">
+                <label>Warna Robot:</label>
+                <button onclick="changeRobotColor()">🎨 Ubah Warna</button>
             </div>
             
-            <div class="status">
-                🖱️ Drag to rotate • 🖱️ Scroll to zoom<br>
-                <span id="animation-status">Animation: OFF</span>
+            <div class="control-group">
+                <label>Kecepatan Animasi:</label>
+                <input type="range" id="animationSpeed" min="0.5" max="3" value="1" step="0.1">
+                <span id="speedValue">1x</span>
             </div>
         </div>
         
+        <div class="status" id="status" style="display: none;">
+            Python + Three.js Aktif ✅
+        </div>
+        
+        <div id="canvas-container"></div>
+        
         <div id="info">
-            <strong>🤖 Advanced Robot 3D Model</strong><br><br>
-            
-            <strong>5 Bentuk Dasar 3D:</strong>
-            <ul class="component-list">
-                <li><span class="highlight">Kubus</span> → Badan robot</li>
-                <li><span class="highlight">Silinder</span> → Leher robot</li>
-                <li><span class="highlight">Bola</span> → Mata robot (2x)</li>
-                <li><span class="highlight">Balok</span> → Tangan robot (2x)</li>
-                <li><span class="highlight">Kerucut</span> → Antena robot</li>
-            </ul>
-            
-            <div class="python-structure">
-<span class="highlight">class</span> AdvancedRobot3D:<br>
-&nbsp;&nbsp;<span class="highlight">def</span> __init__(self):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.body = <span class="highlight">BoxGeometry</span>()<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.neck = <span class="highlight">CylinderGeometry</span>()<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.eyes = <span class="highlight">SphereGeometry</span>()<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.arms = <span class="highlight">BoxGeometry</span>()<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.antenna = <span class="highlight">ConeGeometry</span>()
-            </div>
+            <strong>🤖 Robot Sederhana 3D</strong><br><br>
+            <strong>Komponen 3D:</strong><br>
+            • 📦 Kubus (Badan)<br>
+            • 🔴 Bola (Kepala & Mata)<br>
+            • 🔵 Silinder (Leher, Lengan, Kaki)<br>
+            • 📐 Kerucut (Antena)<br>
+            • 🍩 Torus (Telinga)<br><br>
+            <strong>Kontrol:</strong><br>
+            • Mouse: Rotasi kamera<br>
+            • Panel: Kontrol robot<br><br>
+            <em>Python + Pyodide + Three.js</em>
         </div>
     </div>
 
-    <script>
-        // Advanced Python-like Robot Model Class
-        class AdvancedRobot3D {
-            constructor() {
-                this.components = {
-                    // Kubus - Badan
-                    body: {
-                        type: 'box',
-                        size: [2, 2.5, 1.5],
-                        position: [0, 0, 0],
-                        color: 0x4ecdc4
-                    },
-                    // Silinder - Leher
-                    neck: {
-                        type: 'cylinder',
-                        radiusTop: 0.4,
-                        radiusBottom: 0.4,
-                        height: 0.8,
-                        position: [0, 1.8, 0],
-                        color: 0x45b7d1
-                    },
-                    // Bola - Mata kiri
-                    leftEye: {
-                        type: 'sphere',
-                        radius: 0.15,
-                        position: [-0.3, 2.5, 0.6],
-                        color: 0xff6b6b
-                    },
-                    // Bola - Mata kanan
-                    rightEye: {
-                        type: 'sphere',
-                        radius: 0.15,
-                        position: [0.3, 2.5, 0.6],
-                        color: 0xff6b6b
-                    },
-                    // Balok - Tangan kiri
-                    leftArm: {
-                        type: 'box',
-                        size: [0.4, 1.5, 0.4],
-                        position: [-1.5, 0.5, 0],
-                        color: 0x82e0aa
-                    },
-                    // Balok - Tangan kanan
-                    rightArm: {
-                        type: 'box',
-                        size: [0.4, 1.5, 0.4],
-                        position: [1.5, 0.5, 0],
-                        color: 0x82e0aa
-                    },
-                    // Kerucut - Antena
-                    antenna: {
-                        type: 'cone',
-                        radius: 0.1,
-                        height: 0.8,
-                        position: [0, 3.2, 0],
-                        color: 0xf7dc6f
-                    }
-                };
-                
-                this.animations = {
-                    bodyRotation: 0,
-                    armSwing: 0,
-                    eyeGlow: 0,
-                    antennaWave: 0
-                };
-            }
-            
-            getRandomColor() {
-                const colors = [
-                    0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf7dc6f, 
-                    0xbb8fce, 0x85c1e9, 0x82e0aa, 0xf8c471,
-                    0xf1948a, 0x85c1e9, 0xa569bd, 0x58d68d
-                ];
-                return colors[Math.floor(Math.random() * colors.length)];
-            }
-            
-            updateColors() {
-                Object.keys(this.components).forEach(key => {
-                    this.components[key].color = this.getRandomColor();
-                });
-            }
-        }
+    <script type="text/javascript">
+        // Global variables
+        let scene, camera, renderer, robot;
+        let pyodide;
+        let armAnimationEnabled = false;
+        let eyeAnimationEnabled = false;
+        let colorIndex = 0;
+        let animationSpeed = 1;
+        let mouseX = 0, mouseY = 0;
+        let cameraAngleX = 0, cameraAngleY = 0;
+        
+        const colors = [
+            0x4A90E2, // Blue
+            0xE74C3C, // Red  
+            0x2ECC71, // Green
+            0xF39C12, // Orange
+            0x9B59B6, // Purple
+            0x1ABC9C, // Turquoise
+            0xE67E22, // Dark Orange
+            0x34495E  // Dark Blue
+        ];
 
-        // Three.js variables
-        let scene, camera, renderer, robot, robotModel;
-        let isAnimating = false;
-        let isDancing = false;
-        let isWireframe = false;
-        let autoRotating = false;
-        let controls = {
-            mouseDown: false,
-            mouseX: 0,
-            mouseY: 0
+        // Robot configuration from Python-style data
+        const robotConfig = {
+            body: { type: 'cube', size: [2, 3, 1.5], position: [0, 0, 0] },
+            head: { type: 'sphere', radius: 1.2, position: [0, 2.8, 0] },
+            neck: { type: 'cylinder', radius: 0.3, height: 1.2, position: [0, 1.8, 0] },
+            leftEye: { type: 'sphere', radius: 0.25, position: [-0.4, 3.1, 0.9] },
+            rightEye: { type: 'sphere', radius: 0.25, position: [0.4, 3.1, 0.9] },
+            leftAntenna: { type: 'cone', radius: 0.08, height: 0.8, position: [-0.5, 4.2, 0] },
+            rightAntenna: { type: 'cone', radius: 0.08, height: 0.8, position: [0.5, 4.2, 0] },
+            leftEar: { type: 'torus', radius: 0.35, tube: 0.12, position: [-1.3, 2.8, 0] },
+            rightEar: { type: 'torus', radius: 0.35, tube: 0.12, position: [1.3, 2.8, 0] },
+            leftArm: { type: 'cylinder', radius: 0.25, height: 2.8, position: [-1.8, 0, 0] },
+            rightArm: { type: 'cylinder', radius: 0.25, height: 2.8, position: [1.8, 0, 0] },
+            leftLeg: { type: 'cylinder', radius: 0.35, height: 2.2, position: [-0.7, -2.8, 0] },
+            rightLeg: { type: 'cylinder', radius: 0.35, height: 2.2, position: [0.7, -2.8, 0] }
         };
 
-        function init() {
-            // Create robot model
-            robotModel = new AdvancedRobot3D();
-            
-            // Scene setup
+        async function initializeApp() {
+            try {
+                // Initialize Three.js first
+                initThreeJS();
+                
+                // Create robot immediately
+                createRobot();
+                
+                // Start animation loop
+                animate();
+                
+                // Try to load Pyodide in background
+                try {
+                    pyodide = await loadPyodide();
+                    await pyodide.runPython(`
+import math
+
+class RobotAnimator:
+    def __init__(self):
+        self.time_offset = 0
+        
+    def get_arm_rotation(self, time, speed=1):
+        left_rotation = math.sin(time * speed * 2) * 0.6
+        right_rotation = math.sin(time * speed * 2 + math.pi) * 0.6
+        return left_rotation, right_rotation
+    
+    def get_eye_scale(self, time, speed=1):
+        # Blinking animation
+        blink_cycle = time * speed * 3
+        scale = max(0.2, abs(math.sin(blink_cycle)))
+        return scale
+    
+    def get_antenna_sway(self, time, speed=1):
+        sway = math.sin(time * speed * 1.5) * 0.3
+        return sway
+
+animator = RobotAnimator()
+                    `);
+                    
+                    document.getElementById('status').style.display = 'block';
+                    console.log('Pyodide loaded successfully!');
+                } catch (pyodideError) {
+                    console.warn('Pyodide failed to load, using JavaScript fallback:', pyodideError);
+                }
+                
+                // Hide loading screen
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('controls').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<p style="color: #ff6b6b;">❌ Error loading robot</p><p>Please refresh the page</p>';
+            }
+        }
+        
+        function initThreeJS() {
+            // Create scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
+            scene.background = new THREE.Color(0x0f1419);
             
-            // Camera
+            // Create camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(6, 4, 6);
-            camera.lookAt(0, 0, 0);
+            camera.position.set(6, 4, 8);
             
-            // Renderer
+            // Create renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.setClearColor(0x0a0a0a);
+            renderer.setClearColor(0x0f1419);
             
-            document.getElementById('container').appendChild(renderer.domElement);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
             
-            // Advanced Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(15, 15, 5);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight.position.set(10, 10, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
             directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
             
-            const pointLight1 = new THREE.PointLight(0x4ecdc4, 0.8, 100);
-            pointLight1.position.set(-5, 5, 5);
+            const pointLight1 = new THREE.PointLight(0x00aaff, 0.8);
+            pointLight1.position.set(-8, 5, 3);
             scene.add(pointLight1);
             
-            const pointLight2 = new THREE.PointLight(0xff6b6b, 0.6, 100);
-            pointLight2.position.set(5, 5, -5);
+            const pointLight2 = new THREE.PointLight(0xff4444, 0.6);
+            pointLight2.position.set(8, 3, -3);
             scene.add(pointLight2);
             
-            // Create robot
-            createAdvancedRobot();
+            // Add ground
+            const groundGeometry = new THREE.PlaneGeometry(25, 25);
+            const groundMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x1a1a2e,
+                transparent: true,
+                opacity: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -5;
+            ground.receiveShadow = true;
+            scene.add(ground);
             
-            // Setup controls
-            setupControls();
-            
-            // Start animation
-            animate();
+            // Add mouse controls
+            setupMouseControls();
         }
-
-        function createAdvancedRobot() {
+        
+        function setupMouseControls() {
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - window.innerWidth / 2);
+                mouseY = (event.clientY - window.innerHeight / 2);
+            });
+            
+            document.addEventListener('wheel', (event) => {
+                camera.position.multiplyScalar(event.deltaY > 0 ? 1.1 : 0.9);
+                camera.position.x = Math.max(-20, Math.min(20, camera.position.x));
+                camera.position.y = Math.max(2, Math.min(15, camera.position.y));
+                camera.position.z = Math.max(-20, Math.min(20, camera.position.z));
+            });
+        }
+        
+        function createRobot() {
             robot = new THREE.Group();
             
-            // 1. Kubus - Badan
-            const bodyGeometry = new THREE.BoxGeometry(...robotModel.components.body.size);
+            // Materials
             const bodyMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.body.color,
+                color: colors[colorIndex],
+                shininess: 30
+            });
+            const eyeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                emissive: 0x222222,
                 shininess: 100
             });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.position.set(...robotModel.components.body.position);
-            body.castShadow = true;
-            body.receiveShadow = true;
-            body.name = 'body';
-            robot.add(body);
-            
-            // 2. Silinder - Leher
-            const neckGeometry = new THREE.CylinderGeometry(
-                robotModel.components.neck.radiusTop,
-                robotModel.components.neck.radiusBottom,
-                robotModel.components.neck.height,
-                16
-            );
-            const neckMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.neck.color,
-                shininess: 100
-            });
-            const neck = new THREE.Mesh(neckGeometry, neckMaterial);
-            neck.position.set(...robotModel.components.neck.position);
-            neck.castShadow = true;
-            neck.receiveShadow = true;
-            neck.name = 'neck';
-            robot.add(neck);
-            
-            // 3. Bola - Mata Kiri
-            const leftEyeGeometry = new THREE.SphereGeometry(robotModel.components.leftEye.radius, 16, 16);
-            const leftEyeMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.leftEye.color,
-                shininess: 100,
-                emissive: robotModel.components.leftEye.color,
-                emissiveIntensity: 0.3
-            });
-            const leftEye = new THREE.Mesh(leftEyeGeometry, leftEyeMaterial);
-            leftEye.position.set(...robotModel.components.leftEye.position);
-            leftEye.castShadow = true;
-            leftEye.name = 'leftEye';
-            robot.add(leftEye);
-            
-            // 4. Bola - Mata Kanan
-            const rightEyeGeometry = new THREE.SphereGeometry(robotModel.components.rightEye.radius, 16, 16);
-            const rightEyeMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.rightEye.color,
-                shininess: 100,
-                emissive: robotModel.components.rightEye.color,
-                emissiveIntensity: 0.3
-            });
-            const rightEye = new THREE.Mesh(rightEyeGeometry, rightEyeMaterial);
-            rightEye.position.set(...robotModel.components.rightEye.position);
-            rightEye.castShadow = true;
-            rightEye.name = 'rightEye';
-            robot.add(rightEye);
-            
-            // 5. Balok - Tangan Kiri
-            const leftArmGeometry = new THREE.BoxGeometry(...robotModel.components.leftArm.size);
-            const leftArmMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.leftArm.color,
-                shininess: 100
-            });
-            const leftArm = new THREE.Mesh(leftArmGeometry, leftArmMaterial);
-            leftArm.position.set(...robotModel.components.leftArm.position);
-            leftArm.castShadow = true;
-            leftArm.receiveShadow = true;
-            leftArm.name = 'leftArm';
-            robot.add(leftArm);
-            
-            // 6. Balok - Tangan Kanan
-            const rightArmGeometry = new THREE.BoxGeometry(...robotModel.components.rightArm.size);
-            const rightArmMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.rightArm.color,
-                shininess: 100
-            });
-            const rightArm = new THREE.Mesh(rightArmGeometry, rightArmMaterial);
-            rightArm.position.set(...robotModel.components.rightArm.position);
-            rightArm.castShadow = true;
-            rightArm.receiveShadow = true;
-            rightArm.name = 'rightArm';
-            robot.add(rightArm);
-            
-            // 7. Kerucut - Antena
-            const antennaGeometry = new THREE.ConeGeometry(
-                robotModel.components.antenna.radius,
-                robotModel.components.antenna.height,
-                8
-            );
             const antennaMaterial = new THREE.MeshPhongMaterial({ 
-                color: robotModel.components.antenna.color,
-                shininess: 100,
-                emissive: robotModel.components.antenna.color,
-                emissiveIntensity: 0.2
+                color: 0xff4444,
+                emissive: 0x330000
             });
-            const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
-            antenna.position.set(...robotModel.components.antenna.position);
-            antenna.castShadow = true;
-            antenna.name = 'antenna';
-            robot.add(antenna);
+            const earMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x44ff44,
+                emissive: 0x003300
+            });
+            
+            // Create robot parts
+            Object.entries(robotConfig).forEach(([name, config]) => {
+                let geometry, material, mesh;
+                
+                // Choose material
+                if (name.includes('Eye')) {
+                    material = eyeMaterial;
+                } else if (name.includes('Antenna')) {
+                    material = antennaMaterial;
+                } else if (name.includes('Ear')) {
+                    material = earMaterial;
+                } else {
+                    material = bodyMaterial;
+                }
+                
+                // Create geometry
+                switch (config.type) {
+                    case 'cube':
+                        geometry = new THREE.BoxGeometry(config.size[0], config.size[1], config.size[2]);
+                        break;
+                    case 'sphere':
+                        geometry = new THREE.SphereGeometry(config.radius, 32, 32);
+                        break;
+                    case 'cylinder':
+                        geometry = new THREE.CylinderGeometry(config.radius, config.radius, config.height, 32);
+                        break;
+                    case 'cone':
+                        geometry = new THREE.ConeGeometry(config.radius, config.height, 32);
+                        break;
+                    case 'torus':
+                        geometry = new THREE.TorusGeometry(config.radius, config.tube, 16, 100);
+                        break;
+                }
+                
+                mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(config.position[0], config.position[1], config.position[2]);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.name = name;
+                
+                robot.add(mesh);
+            });
             
             scene.add(robot);
+            console.log('Robot created successfully!');
         }
-
-        function setupControls() {
-            // Mouse controls
-            renderer.domElement.addEventListener('mousedown', (event) => {
-                controls.mouseDown = true;
-                controls.mouseX = event.clientX;
-                controls.mouseY = event.clientY;
-            });
-            
-            document.addEventListener('mouseup', () => {
-                controls.mouseDown = false;
-            });
-            
-            document.addEventListener('mousemove', (event) => {
-                if (!controls.mouseDown) return;
-                
-                const deltaX = event.clientX - controls.mouseX;
-                const deltaY = event.clientY - controls.mouseY;
-                
-                robot.rotation.y += deltaX * 0.01;
-                robot.rotation.x += deltaY * 0.01;
-                
-                controls.mouseX = event.clientX;
-                controls.mouseY = event.clientY;
-            });
-            
-            renderer.domElement.addEventListener('wheel', (event) => {
-                event.preventDefault();
-                const zoomSpeed = 0.1;
-                const direction = event.deltaY > 0 ? 1 : -1;
-                
-                camera.position.multiplyScalar(1 + direction * zoomSpeed);
-                camera.position.clampLength(3, 25);
-            });
-            
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-
+        
         function animate() {
             requestAnimationFrame(animate);
             
             const time = Date.now() * 0.001;
             
-            if (autoRotating) {
-                robot.rotation.y += 0.005;
-            }
-            
-            if (isAnimating && robot) {
-                // Basic robot animation
-                const leftArm = robot.getObjectByName('leftArm');
-                const rightArm = robot.getObjectByName('rightArm');
-                const antenna = robot.getObjectByName('antenna');
+            if (robot) {
+                // Update camera position based on mouse
+                cameraAngleY += (mouseX * 0.00005);
+                cameraAngleX += (mouseY * 0.00005);
+                cameraAngleX = Math.max(-Math.PI/3, Math.min(Math.PI/3, cameraAngleX));
                 
-                if (leftArm) leftArm.rotation.z = Math.sin(time * 2) * 0.3;
-                if (rightArm) rightArm.rotation.z = Math.sin(time * 2 + Math.PI) * 0.3;
-                if (antenna) antenna.rotation.z = Math.sin(time * 3) * 0.1;
-            }
-            
-            if (isDancing && robot) {
-                // Robot dance animation
-                robot.rotation.y += 0.02;
-                robot.position.y = Math.sin(time * 4) * 0.2;
+                const radius = 10;
+                camera.position.x = Math.cos(cameraAngleY) * Math.cos(cameraAngleX) * radius;
+                camera.position.y = Math.sin(cameraAngleX) * radius + 3;
+                camera.position.z = Math.sin(cameraAngleY) * Math.cos(cameraAngleX) * radius;
+                camera.lookAt(0, 1, 0);
                 
-                const body = robot.getObjectByName('body');
-                const leftArm = robot.getObjectByName('leftArm');
-                const rightArm = robot.getObjectByName('rightArm');
+                // Arm animation
+                if (armAnimationEnabled) {
+                    let leftRotation, rightRotation;
+                    
+                    if (pyodide) {
+                        try {
+                            const rotations = pyodide.runPython(`
+left, right = animator.get_arm_rotation(${time}, ${animationSpeed})
+[left, right]
+                            `).toJs();
+                            leftRotation = rotations[0];
+                            rightRotation = rotations[1];
+                        } catch (e) {
+                            // Fallback to JavaScript
+                            leftRotation = Math.sin(time * animationSpeed * 2) * 0.6;
+                            rightRotation = Math.sin(time * animationSpeed * 2 + Math.PI) * 0.6;
+                        }
+                    } else {
+                        leftRotation = Math.sin(time * animationSpeed * 2) * 0.6;
+                        rightRotation = Math.sin(time * animationSpeed * 2 + Math.PI) * 0.6;
+                    }
+                    
+                    const leftArm = robot.getObjectByName('leftArm');
+                    const rightArm = robot.getObjectByName('rightArm');
+                    if (leftArm) leftArm.rotation.z = leftRotation;
+                    if (rightArm) rightArm.rotation.z = rightRotation;
+                }
                 
-                if (body) body.rotation.z = Math.sin(time * 2) * 0.1;
-                if (leftArm) leftArm.rotation.z = Math.sin(time * 4) * 0.5;
-                if (rightArm) rightArm.rotation.z = Math.sin(time * 4 + Math.PI) * 0.5;
-            }
-            
-            // Eye glow effect
-            const leftEye = robot.getObjectByName('leftEye');
-            const rightEye = robot.getObjectByName('rightEye');
-            if (leftEye && rightEye) {
-                const glowIntensity = (Math.sin(time * 5) + 1) * 0.4;
-                leftEye.material.emissiveIntensity = glowIntensity;
-                rightEye.material.emissiveIntensity = glowIntensity;
+                // Eye animation
+                if (eyeAnimationEnabled) {
+                    let eyeScale;
+                    
+                    if (pyodide) {
+                        try {
+                            eyeScale = pyodide.runPython(`animator.get_eye_scale(${time}, ${animationSpeed})`);
+                        } catch (e) {
+                            eyeScale = Math.max(0.2, Math.abs(Math.sin(time * animationSpeed * 3)));
+                        }
+                    } else {
+                        eyeScale = Math.max(0.2, Math.abs(Math.sin(time * animationSpeed * 3)));
+                    }
+                    
+                    const leftEye = robot.getObjectByName('leftEye');
+                    const rightEye = robot.getObjectByName('rightEye');
+                    if (leftEye) leftEye.scale.y = eyeScale;
+                    if (rightEye) rightEye.scale.y = eyeScale;
+                }
+                
+                // Antenna sway
+                const antennaSwayLeft = Math.sin(time * 1.5) * 0.2;
+                const antennaSwayRight = Math.sin(time * 1.5 + Math.PI) * 0.2;
+                const leftAntenna = robot.getObjectByName('leftAntenna');
+                const rightAntenna = robot.getObjectByName('rightAntenna');
+                if (leftAntenna) leftAntenna.rotation.z = antennaSwayLeft;
+                if (rightAntenna) rightAntenna.rotation.z = antennaSwayRight;
+                
+                // Manual rotation
+                const rotationSlider = document.getElementById('robotRotation');
+                if (rotationSlider) {
+                    robot.rotation.y = parseFloat(rotationSlider.value) * Math.PI / 180;
+                    document.getElementById('rotationValue').textContent = rotationSlider.value + '°';
+                }
+                
+                // Animation speed
+                const speedSlider = document.getElementById('animationSpeed');
+                if (speedSlider) {
+                    animationSpeed = parseFloat(speedSlider.value);
+                    document.getElementById('speedValue').textContent = animationSpeed + 'x';
+                }
             }
             
             renderer.render(scene, camera);
         }
-
-        // Control functions
-        function animateRobot() {
-            isAnimating = !isAnimating;
-            isDancing = false;
-            const button = event.target;
-            button.textContent = isAnimating ? '⏸️ Stop Animation' : '🔄 Animate Robot';
-            updateStatus();
+        
+        function toggleArmAnimation() {
+            armAnimationEnabled = !armAnimationEnabled;
+            const btn = document.getElementById('armBtn');
+            btn.classList.toggle('active', armAnimationEnabled);
+            btn.textContent = armAnimationEnabled ? '⏸️ Lengan' : '🔄 Lengan';
         }
-
-        function robotDance() {
-            isDancing = !isDancing;
-            isAnimating = false;
-            const button = event.target;
-            button.textContent = isDancing ? '⏸️ Stop Dance' : '💃 Robot Dance';
-            updateStatus();
+        
+        function toggleEyeAnimation() {
+            eyeAnimationEnabled = !eyeAnimationEnabled;
+            const btn = document.getElementById('eyeBtn');
+            btn.classList.toggle('active', eyeAnimationEnabled);
+            btn.textContent = eyeAnimationEnabled ? '⏸️ Mata' : '👁️ Mata';
         }
-
-        function changeColors() {
-            robotModel.updateColors();
+        
+        function changeRobotColor() {
+            colorIndex = (colorIndex + 1) % colors.length;
+            const newColor = colors[colorIndex];
             
-            // Update all materials
-            Object.keys(robotModel.components).forEach(componentName => {
-                const mesh = robot.getObjectByName(componentName);
-                if (mesh) {
-                    mesh.material.color.setHex(robotModel.components[componentName].color);
-                    if (mesh.material.emissive) {
-                        mesh.material.emissive.setHex(robotModel.components[componentName].color);
+            if (robot) {
+                robot.children.forEach(child => {
+                    if (!child.name.includes('Eye') && 
+                        !child.name.includes('Antenna') && 
+                        !child.name.includes('Ear')) {
+                        child.material.color.setHex(newColor);
                     }
-                }
-            });
+                });
+            }
         }
-
-        function resetView() {
-            camera.position.set(6, 4, 6);
-            camera.lookAt(0, 0, 0);
-            robot.rotation.set(0, 0, 0);
-            robot.position.set(0, 0, 0);
-            isAnimating = false;
-            isDancing = false;
-            autoRotating = false;
-            updateStatus();
-        }
-
-        function toggleWireframe() {
-            isWireframe = !isWireframe;
-            const button = event.target;
-            button.textContent = isWireframe ? '🎨 Solid View' : '📐 Wireframe';
-            
-            robot.children.forEach(child => {
-                if (child.material) {
-                    child.material.wireframe = isWireframe;
-                }
-            });
-        }
-
-        function autoRotate() {
-            autoRotating = !autoRotating;
-            const button = event.target;
-            button.textContent = autoRotating ? '⏸️ Stop Rotate' : '🌀 Auto Rotate';
-        }
-
-        function updateStatus() {
-            const statusEl = document.getElementById('animation-status');
-            let status = 'OFF';
-            if (isAnimating) status = 'ANIMATING';
-            if (isDancing) status = 'DANCING';
-            statusEl.textContent = `Animation: ${status}`;
-        }
-
-        // Initialize
-        init();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Start the application
+        initializeApp();
     </script>
 </body>
 </html>
