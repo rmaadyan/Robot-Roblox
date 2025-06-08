@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot 3D - 5 Bentuk Dasar</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            min-width: 280px;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border: none;
+            color: white;
+            padding: 12px 18px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.5);
+            background: linear-gradient(45deg, #45b7d1, #4ECDC4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .special-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .special-btn:hover {
+            background: linear-gradient(45deg, #ff7979, #ff6b6b);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        h3 {
+            margin: 0 0 15px 0;
+            color: #4ecdc4;
+            font-size: 18px;
+        }
+        
+        .component-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .component-list li {
+            padding: 8px 0;
+            border-left: 3px solid #4ecdc4;
+            padding-left: 15px;
+            margin: 5px 0;
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 5px;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .python-structure {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 15px;
+            border-left: 4px solid #4ecdc4;
+            color: #e0e0e0;
+        }
+        
+        .highlight {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h3>🤖 Advanced Robot Controller</h3>
+            
+            <div class="control-section">
+                <button onclick="animateRobot()">🔄 Animate Robot</button>
+                <button onclick="robotDance()">💃 Robot Dance</button>
+            </div>
+            
+            <div class="control-section">
+                <button onclick="changeColors()">🎨 Random Colors</button>
+                <button onclick="toggleWireframe()">📐 Wireframe</button>
+            </div>
+            
+            <div class="control-section">
+                <button onclick="resetView()" class="special-btn">🔄 Reset View</button>
+                <button onclick="autoRotate()" class="special-btn">🌀 Auto Rotate</button>
+            </div>
+            
+            <div class="status">
+                🖱️ Drag to rotate • 🖱️ Scroll to zoom<br>
+                <span id="animation-status">Animation: OFF</span>
+            </div>
+        </div>
+        
+        <div id="info">
+            <strong>🤖 Advanced Robot 3D Model</strong><br><br>
+            
+            <strong>5 Bentuk Dasar 3D:</strong>
+            <ul class="component-list">
+                <li><span class="highlight">Kubus</span> → Badan robot</li>
+                <li><span class="highlight">Silinder</span> → Leher robot</li>
+                <li><span class="highlight">Bola</span> → Mata robot (2x)</li>
+                <li><span class="highlight">Balok</span> → Tangan robot (2x)</li>
+                <li><span class="highlight">Kerucut</span> → Antena robot</li>
+            </ul>
+            
+            <div class="python-structure">
+<span class="highlight">class</span> AdvancedRobot3D:<br>
+&nbsp;&nbsp;<span class="highlight">def</span> __init__(self):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.body = <span class="highlight">BoxGeometry</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.neck = <span class="highlight">CylinderGeometry</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.eyes = <span class="highlight">SphereGeometry</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.arms = <span class="highlight">BoxGeometry</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.antenna = <span class="highlight">ConeGeometry</span>()
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Advanced Python-like Robot Model Class
+        class AdvancedRobot3D {
+            constructor() {
+                this.components = {
+                    // Kubus - Badan
+                    body: {
+                        type: 'box',
+                        size: [2, 2.5, 1.5],
+                        position: [0, 0, 0],
+                        color: 0x4ecdc4
+                    },
+                    // Silinder - Leher
+                    neck: {
+                        type: 'cylinder',
+                        radiusTop: 0.4,
+                        radiusBottom: 0.4,
+                        height: 0.8,
+                        position: [0, 1.8, 0],
+                        color: 0x45b7d1
+                    },
+                    // Bola - Mata kiri
+                    leftEye: {
+                        type: 'sphere',
+                        radius: 0.15,
+                        position: [-0.3, 2.5, 0.6],
+                        color: 0xff6b6b
+                    },
+                    // Bola - Mata kanan
+                    rightEye: {
+                        type: 'sphere',
+                        radius: 0.15,
+                        position: [0.3, 2.5, 0.6],
+                        color: 0xff6b6b
+                    },
+                    // Balok - Tangan kiri
+                    leftArm: {
+                        type: 'box',
+                        size: [0.4, 1.5, 0.4],
+                        position: [-1.5, 0.5, 0],
+                        color: 0x82e0aa
+                    },
+                    // Balok - Tangan kanan
+                    rightArm: {
+                        type: 'box',
+                        size: [0.4, 1.5, 0.4],
+                        position: [1.5, 0.5, 0],
+                        color: 0x82e0aa
+                    },
+                    // Kerucut - Antena
+                    antenna: {
+                        type: 'cone',
+                        radius: 0.1,
+                        height: 0.8,
+                        position: [0, 3.2, 0],
+                        color: 0xf7dc6f
+                    }
+                };
+                
+                this.animations = {
+                    bodyRotation: 0,
+                    armSwing: 0,
+                    eyeGlow: 0,
+                    antennaWave: 0
+                };
+            }
+            
+            getRandomColor() {
+                const colors = [
+                    0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf7dc6f, 
+                    0xbb8fce, 0x85c1e9, 0x82e0aa, 0xf8c471,
+                    0xf1948a, 0x85c1e9, 0xa569bd, 0x58d68d
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            updateColors() {
+                Object.keys(this.components).forEach(key => {
+                    this.components[key].color = this.getRandomColor();
+                });
+            }
+        }
+
+        // Three.js variables
+        let scene, camera, renderer, robot, robotModel;
+        let isAnimating = false;
+        let isDancing = false;
+        let isWireframe = false;
+        let autoRotating = false;
+        let controls = {
+            mouseDown: false,
+            mouseX: 0,
+            mouseY: 0
+        };
+
+        function init() {
+            // Create robot model
+            robotModel = new AdvancedRobot3D();
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(6, 4, 6);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setClearColor(0x0a0a0a);
+            
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Advanced Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(15, 15, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            const pointLight1 = new THREE.PointLight(0x4ecdc4, 0.8, 100);
+            pointLight1.position.set(-5, 5, 5);
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0xff6b6b, 0.6, 100);
+            pointLight2.position.set(5, 5, -5);
+            scene.add(pointLight2);
+            
+            // Create robot
+            createAdvancedRobot();
+            
+            // Setup controls
+            setupControls();
+            
+            // Start animation
+            animate();
+        }
+
+        function createAdvancedRobot() {
+            robot = new THREE.Group();
+            
+            // 1. Kubus - Badan
+            const bodyGeometry = new THREE.BoxGeometry(...robotModel.components.body.size);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.body.color,
+                shininess: 100
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.set(...robotModel.components.body.position);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            body.name = 'body';
+            robot.add(body);
+            
+            // 2. Silinder - Leher
+            const neckGeometry = new THREE.CylinderGeometry(
+                robotModel.components.neck.radiusTop,
+                robotModel.components.neck.radiusBottom,
+                robotModel.components.neck.height,
+                16
+            );
+            const neckMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.neck.color,
+                shininess: 100
+            });
+            const neck = new THREE.Mesh(neckGeometry, neckMaterial);
+            neck.position.set(...robotModel.components.neck.position);
+            neck.castShadow = true;
+            neck.receiveShadow = true;
+            neck.name = 'neck';
+            robot.add(neck);
+            
+            // 3. Bola - Mata Kiri
+            const leftEyeGeometry = new THREE.SphereGeometry(robotModel.components.leftEye.radius, 16, 16);
+            const leftEyeMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.leftEye.color,
+                shininess: 100,
+                emissive: robotModel.components.leftEye.color,
+                emissiveIntensity: 0.3
+            });
+            const leftEye = new THREE.Mesh(leftEyeGeometry, leftEyeMaterial);
+            leftEye.position.set(...robotModel.components.leftEye.position);
+            leftEye.castShadow = true;
+            leftEye.name = 'leftEye';
+            robot.add(leftEye);
+            
+            // 4. Bola - Mata Kanan
+            const rightEyeGeometry = new THREE.SphereGeometry(robotModel.components.rightEye.radius, 16, 16);
+            const rightEyeMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.rightEye.color,
+                shininess: 100,
+                emissive: robotModel.components.rightEye.color,
+                emissiveIntensity: 0.3
+            });
+            const rightEye = new THREE.Mesh(rightEyeGeometry, rightEyeMaterial);
+            rightEye.position.set(...robotModel.components.rightEye.position);
+            rightEye.castShadow = true;
+            rightEye.name = 'rightEye';
+            robot.add(rightEye);
+            
+            // 5. Balok - Tangan Kiri
+            const leftArmGeometry = new THREE.BoxGeometry(...robotModel.components.leftArm.size);
+            const leftArmMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.leftArm.color,
+                shininess: 100
+            });
+            const leftArm = new THREE.Mesh(leftArmGeometry, leftArmMaterial);
+            leftArm.position.set(...robotModel.components.leftArm.position);
+            leftArm.castShadow = true;
+            leftArm.receiveShadow = true;
+            leftArm.name = 'leftArm';
+            robot.add(leftArm);
+            
+            // 6. Balok - Tangan Kanan
+            const rightArmGeometry = new THREE.BoxGeometry(...robotModel.components.rightArm.size);
+            const rightArmMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.rightArm.color,
+                shininess: 100
+            });
+            const rightArm = new THREE.Mesh(rightArmGeometry, rightArmMaterial);
+            rightArm.position.set(...robotModel.components.rightArm.position);
+            rightArm.castShadow = true;
+            rightArm.receiveShadow = true;
+            rightArm.name = 'rightArm';
+            robot.add(rightArm);
+            
+            // 7. Kerucut - Antena
+            const antennaGeometry = new THREE.ConeGeometry(
+                robotModel.components.antenna.radius,
+                robotModel.components.antenna.height,
+                8
+            );
+            const antennaMaterial = new THREE.MeshPhongMaterial({ 
+                color: robotModel.components.antenna.color,
+                shininess: 100,
+                emissive: robotModel.components.antenna.color,
+                emissiveIntensity: 0.2
+            });
+            const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+            antenna.position.set(...robotModel.components.antenna.position);
+            antenna.castShadow = true;
+            antenna.name = 'antenna';
+            robot.add(antenna);
+            
+            scene.add(robot);
+        }
+
+        function setupControls() {
+            // Mouse controls
+            renderer.domElement.addEventListener('mousedown', (event) => {
+                controls.mouseDown = true;
+                controls.mouseX = event.clientX;
+                controls.mouseY = event.clientY;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                controls.mouseDown = false;
+            });
+            
+            document.addEventListener('mousemove', (event) => {
+                if (!controls.mouseDown) return;
+                
+                const deltaX = event.clientX - controls.mouseX;
+                const deltaY = event.clientY - controls.mouseY;
+                
+                robot.rotation.y += deltaX * 0.01;
+                robot.rotation.x += deltaY * 0.01;
+                
+                controls.mouseX = event.clientX;
+                controls.mouseY = event.clientY;
+            });
+            
+            renderer.domElement.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                const zoomSpeed = 0.1;
+                const direction = event.deltaY > 0 ? 1 : -1;
+                
+                camera.position.multiplyScalar(1 + direction * zoomSpeed);
+                camera.position.clampLength(3, 25);
+            });
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = Date.now() * 0.001;
+            
+            if (autoRotating) {
+                robot.rotation.y += 0.005;
+            }
+            
+            if (isAnimating && robot) {
+                // Basic robot animation
+                const leftArm = robot.getObjectByName('leftArm');
+                const rightArm = robot.getObjectByName('rightArm');
+                const antenna = robot.getObjectByName('antenna');
+                
+                if (leftArm) leftArm.rotation.z = Math.sin(time * 2) * 0.3;
+                if (rightArm) rightArm.rotation.z = Math.sin(time * 2 + Math.PI) * 0.3;
+                if (antenna) antenna.rotation.z = Math.sin(time * 3) * 0.1;
+            }
+            
+            if (isDancing && robot) {
+                // Robot dance animation
+                robot.rotation.y += 0.02;
+                robot.position.y = Math.sin(time * 4) * 0.2;
+                
+                const body = robot.getObjectByName('body');
+                const leftArm = robot.getObjectByName('leftArm');
+                const rightArm = robot.getObjectByName('rightArm');
+                
+                if (body) body.rotation.z = Math.sin(time * 2) * 0.1;
+                if (leftArm) leftArm.rotation.z = Math.sin(time * 4) * 0.5;
+                if (rightArm) rightArm.rotation.z = Math.sin(time * 4 + Math.PI) * 0.5;
+            }
+            
+            // Eye glow effect
+            const leftEye = robot.getObjectByName('leftEye');
+            const rightEye = robot.getObjectByName('rightEye');
+            if (leftEye && rightEye) {
+                const glowIntensity = (Math.sin(time * 5) + 1) * 0.4;
+                leftEye.material.emissiveIntensity = glowIntensity;
+                rightEye.material.emissiveIntensity = glowIntensity;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Control functions
+        function animateRobot() {
+            isAnimating = !isAnimating;
+            isDancing = false;
+            const button = event.target;
+            button.textContent = isAnimating ? '⏸️ Stop Animation' : '🔄 Animate Robot';
+            updateStatus();
+        }
+
+        function robotDance() {
+            isDancing = !isDancing;
+            isAnimating = false;
+            const button = event.target;
+            button.textContent = isDancing ? '⏸️ Stop Dance' : '💃 Robot Dance';
+            updateStatus();
+        }
+
+        function changeColors() {
+            robotModel.updateColors();
+            
+            // Update all materials
+            Object.keys(robotModel.components).forEach(componentName => {
+                const mesh = robot.getObjectByName(componentName);
+                if (mesh) {
+                    mesh.material.color.setHex(robotModel.components[componentName].color);
+                    if (mesh.material.emissive) {
+                        mesh.material.emissive.setHex(robotModel.components[componentName].color);
+                    }
+                }
+            });
+        }
+
+        function resetView() {
+            camera.position.set(6, 4, 6);
+            camera.lookAt(0, 0, 0);
+            robot.rotation.set(0, 0, 0);
+            robot.position.set(0, 0, 0);
+            isAnimating = false;
+            isDancing = false;
+            autoRotating = false;
+            updateStatus();
+        }
+
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            const button = event.target;
+            button.textContent = isWireframe ? '🎨 Solid View' : '📐 Wireframe';
+            
+            robot.children.forEach(child => {
+                if (child.material) {
+                    child.material.wireframe = isWireframe;
+                }
+            });
+        }
+
+        function autoRotate() {
+            autoRotating = !autoRotating;
+            const button = event.target;
+            button.textContent = autoRotating ? '⏸️ Stop Rotate' : '🌀 Auto Rotate';
+        }
+
+        function updateStatus() {
+            const statusEl = document.getElementById('animation-status');
+            let status = 'OFF';
+            if (isAnimating) status = 'ANIMATING';
+            if (isDancing) status = 'DANCING';
+            statusEl.textContent = `Animation: ${status}`;
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
