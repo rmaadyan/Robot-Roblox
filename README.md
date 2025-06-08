@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Robot 3D Sederhana
 
 Proyek ini menampilkan visualisasi robot 3D sederhana menggunakan:
@@ -36,3 +37,6 @@ Proyek ini menampilkan visualisasi robot 3D sederhana menggunakan:
 
 - [Pyodide](https://pyodide.org/) v0.24.1
 - [Plotly](https://plotly.com/python/) JavaScript
+=======
+# Robot-Roblox
+>>>>>>> 797d8f34e4cdbd3a496dd69d4078aa0b06b2c744
